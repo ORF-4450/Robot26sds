@@ -26,7 +26,7 @@ import edu.wpi.first.wpilibj.DriverStation;
  */
 public final class Constants
 {
-	public static String		PROGRAM_NAME = "ORF26rev-11.04.25";
+	public static String		PROGRAM_NAME = "RAC26sds-11.13.25";
 
 	public static Robot			robot;
 
@@ -128,7 +128,7 @@ public final class Constants
 	
 	// GamePad port assignments.
 	public static final int		DRIVER_PAD = 0, UTILITY_PAD = 1;
-    public static final double  DRIVE_DEADBAND = 0.1, ROTATION_DEADBAND = .1;
+    public static final double  DRIVE_DEADBAND = 0.1, ROTATION_DEADBAND = 0.1;
 
 	// LCD display line number constants showing class where the line is set.
 	public static final int		LCD_1 = 1;	    // Robot, Auto Commands.

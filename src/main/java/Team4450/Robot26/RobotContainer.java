@@ -2,13 +2,16 @@
 package Team4450.Robot26;
 
 import static Team4450.Robot26.Constants.*;
+
+import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 
 import Team4450.Robot26.commands.DriveCommand;
 import Team4450.Robot26.subsystems.Candle;
-import Team4450.Robot26.subsystems.DriveBase;
 import Team4450.Robot26.subsystems.ShuffleBoard;
+import Team4450.Robot26.subsystems.SDS.CommandSwerveDrivetrain;
+import Team4450.Robot26.subsystems.SDS.TunerConstants;
 import Team4450.Lib.MonitorPDP;
 import Team4450.Lib.NavX;
 import Team4450.Lib.Util;
@@ -30,6 +33,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 /**
@@ -42,9 +46,9 @@ public class RobotContainer
 {
 	// Subsystems.
 
-	public static ShuffleBoard			shuffleBoard;
-	public static DriveBase 			driveBase;
-	private Candle        				candle = null;
+	public static ShuffleBoard			 shuffleBoard;
+	public final CommandSwerveDrivetrain driveBase;
+	private Candle        				 candle = null;
 
 	// Subsystem Default Commands.
 
@@ -156,7 +160,8 @@ public class RobotContainer
 		// Create subsystems prior to button mapping.
 
 		shuffleBoard = new ShuffleBoard();
-		driveBase = new DriveBase();
+
+		driveBase = TunerConstants.createDrivetrain();
 		
 		// if (RobotBase.isReal()) 
 		// {
@@ -211,6 +216,14 @@ public class RobotContainer
 									driverController.getRightXDS(),
 									driverController));
 		
+		// Idle while the robot is disabled. This ensures the configured
+        // neutral mode is applied to the drive motors while disabled.
+        
+		final var idle = new SwerveRequest.Idle();
+        RobotModeTriggers.disabled().whileTrue(
+            driveBase.applyRequest(() -> idle).ignoringDisable(true)
+        );
+
 		//Start the compressor, PDP and camera feed monitoring Tasks.
 
 		monitorCompressorThread = MonitorCompressorPH.getInstance(pcm);
@@ -327,21 +340,21 @@ public class RobotContainer
 		//));
 
 		// toggle slow-mode
-		new Trigger(() -> driverController.getLeftBumperButton())
-			.onTrue(new InstantCommand(driveBase::enableSlowMode))
-			.onFalse(new InstantCommand(driveBase::disableSlowMode));
+		// new Trigger(() -> driverController.getLeftBumperButton())  rich
+		// 	.onTrue(new InstantCommand(driveBase::enableSlowMode))
+		// 	.onFalse(new InstantCommand(driveBase::disableSlowMode));
 
 		// reset field orientation (direction).
-		new Trigger(() -> driverController.getStartButton())
-			.onTrue(new InstantCommand(driveBase::zeroGyro));
+		// new Trigger(() -> driverController.getStartButton()) rich
+		// 	.onTrue(new InstantCommand(driveBase::zeroGyro));
 
 		// toggle field-oriented driving mode.
-		new Trigger(() -> driverController.getAButton())
-			.onTrue(new InstantCommand(driveBase::toggleFieldRelative));
+		// new Trigger(() -> driverController.getAButton()) rich
+		// 	.onTrue(new InstantCommand(driveBase::toggleFieldRelative));
 
 		//Holding Right D-Pad button sets X pattern to stop movement.
-		new Trigger(() -> driverController.getPOV() == 90)
-				.onTrue(new RunCommand(() -> driveBase.setX(), driveBase));
+		// new Trigger(() -> driverController.getPOV() == 90) rich
+		// 		.onTrue(new RunCommand(() -> driveBase.setX(), driveBase));
 			
 		// -------- Utility pad buttons ----------
 
@@ -437,9 +450,9 @@ public class RobotContainer
 		if (monitorPDPThread != null) monitorPDPThread.reset();
     }
 
-	public void fixPathPlannerGyro() {
-		driveBase.fixPathPlannerGyro();
-	}
+	// public void fixPathPlannerGyro() { rich
+	// 	driveBase.fixPathPlannerGyro();
+	// }
 
 	/**
      * Loads a PathPlanner path file into a path planner trajectory.

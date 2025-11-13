@@ -5,8 +5,8 @@ import java.util.Optional;
 import org.photonvision.EstimatedRobotPose;
 
 import Team4450.Lib.Util;
-import Team4450.Robot26.subsystems.DriveBase;
 import Team4450.Robot26.subsystems.PhotonVision;
+import Team4450.Robot26.subsystems.SDS.CommandSwerveDrivetrain;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -23,8 +23,8 @@ import edu.wpi.first.wpilibj2.command.Command;
  * in the simulator.
  */
 public class UpdateVisionPose extends Command {
-    DriveBase       robotDrive;
-    PhotonVision photonVision;
+    CommandSwerveDrivetrain     robotDrive;
+    PhotonVision                photonVision;
 
     /**
      * updates the odometry pose estimator to include sighted AprilTag positions from
@@ -32,7 +32,7 @@ public class UpdateVisionPose extends Command {
      * @param cameraSubsystem the PhotonVision subsystem in use
      * @param robotDrive the drive base
      */
-    public UpdateVisionPose(DriveBase robotDrive, PhotonVision photonVision) {
+    public UpdateVisionPose(CommandSwerveDrivetrain robotDrive, PhotonVision photonVision) {
         this.robotDrive = robotDrive;
         this.photonVision = photonVision;
 
@@ -69,7 +69,7 @@ public class UpdateVisionPose extends Command {
                 new Rotation2d(estimatedPoseContainer.estimatedPose.getRotation().getZ())
             );
             
-            robotDrive.updateOdometryVision(pose2d, estimatedPoseContainer.timestampSeconds);
+            //robotDrive.updateOdometryVision(pose2d, estimatedPoseContainer.timestampSeconds); rich
         }
     }
 

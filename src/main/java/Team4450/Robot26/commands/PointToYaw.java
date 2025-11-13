@@ -3,11 +3,11 @@ package Team4450.Robot26.commands;
 import java.util.function.DoubleSupplier;
 
 import Team4450.Lib.Util;
+import Team4450.Robot26.subsystems.SDS.CommandSwerveDrivetrain;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.util.sendable.SendableRegistry;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import Team4450.Robot26.subsystems.DriveBase;
 
 /**
  * This command points the robot to a specified yaw value,
@@ -17,7 +17,7 @@ import Team4450.Robot26.subsystems.DriveBase;
 public class PointToYaw extends Command {
     private DoubleSupplier  yawSupplier;
     private boolean         wait;
-    private DriveBase       robotDrive;
+    private CommandSwerveDrivetrain robotDrive;
     private PIDController   pidController = new PIDController(0.02, 0.0, 0);
 
     private static final double NO_VALUE = Double.NaN;
@@ -28,7 +28,7 @@ public class PointToYaw extends Command {
      * @param robotDrive the drive subsystem
      * @param wait whether or not to wait until it is completed to drive again (whether this command "requires" drivebase)
      */
-    public PointToYaw(DoubleSupplier yawSupplier, DriveBase robotDrive, boolean wait) {
+    public PointToYaw(DoubleSupplier yawSupplier, CommandSwerveDrivetrain robotDrive, boolean wait) {
         Util.consoleLog();
 
         this.yawSupplier = yawSupplier;
@@ -57,7 +57,8 @@ public class PointToYaw extends Command {
 
             // if setTrackingRotation uses NaN, then the drivebase will ignore it and
             // just use joystick values
-            robotDrive.setTrackingRotation(desiredYaw);
+            //robotDrive.setTrackingRotation(desiredYaw); rich
+            
             return;
         }
 
@@ -69,7 +70,7 @@ public class PointToYaw extends Command {
         // sure why it is needed but I believe it is because the input from joysticks in the
         // drive() method is expected to be reversed so we have to manually do that. It doesn't
         // work if we remove the negative.
-        double measured = robotDrive.getGyroYaw();
+        double measured = 0; // robotDrive.getGyroYaw(); rich
         double rotation = -pidController.calculate(measured);
         
         SmartDashboard.putNumber("PointToWay/setpoint", desiredYaw);
@@ -78,11 +79,11 @@ public class PointToYaw extends Command {
 
         if (wait) {
             // if this command is only one running on drivebase (wait) then command it to run
-            robotDrive.drive(0,0,rotation,false);
+            //robotDrive.drive(0,0,rotation,false); rich
         }
         
         // sets the override in drivebase so it will use rotation rather than joystick
-        robotDrive.setTrackingRotation(rotation);
+        //robotDrive.setTrackingRotation(rotation); //
     }
 
     @Override
@@ -101,15 +102,15 @@ public class PointToYaw extends Command {
         pidController.setTolerance(1);
         // pidController.enableContinuousInput(0, 2 * Math.PI); // rotation is continuous: full circle repeats
         pidController.enableContinuousInput(-180, 180);
-        robotDrive.enableTracking();
+        //robotDrive.enableTracking(); rich
     }
 
     @Override
     public void end(boolean interrupted) {
         Util.consoleLog("ended interrupted: %b", interrupted);
 
-        robotDrive.disableTracking();
-        robotDrive.setTrackingRotation(0);
+        //robotDrive.disableTracking(); rich
+        //robotDrive.setTrackingRotation(0); rich
     }
 
     @Override

@@ -184,7 +184,7 @@ public class Robot extends TimedRobot
     LCD.printLine(LCD_1, "Mode: Disabled");
 
     // This is here because Pathplanner Autos don't stop the robot when it is disabled.
-    RobotContainer.driveBase.stop();
+    //RobotContainer.driveBase.stop(); rich
 
     // Reset driver station LEDs.
 
@@ -266,7 +266,7 @@ public class Robot extends TimedRobot
     SmartDashboard.putBoolean("Teleop Mode", true);
 
     robotContainer.resetFaults();
-    robotContainer.fixPathPlannerGyro(); // Because of this only use blue alliance during practice
+    //robotContainer.fixPathPlannerGyro(); rich // Because of this only use blue alliance during practice
 
     // Driving handled by DriveCommand which is default command for the DriveBase.
     // Other commands scheduled by joystick buttons.

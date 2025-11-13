@@ -6,13 +6,12 @@ import edu.wpi.first.util.sendable.SendableRegistry;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import Team4450.Robot26.subsystems.PhotonVision;
+import Team4450.Robot26.subsystems.SDS.CommandSwerveDrivetrain;
 
 import java.util.Optional;
 
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
-
-import Team4450.Robot26.subsystems.DriveBase;
 
 /**
  * This command points the robot to the yaw value from the AprilTag,
@@ -22,15 +21,18 @@ import Team4450.Robot26.subsystems.DriveBase;
 
 public class AlignToTag extends Command {
     PIDController rotationController = new PIDController(0.035, 0, 0); // for rotating drivebase
-    DriveBase robotDrive;
+    CommandSwerveDrivetrain robotDrive;
     PhotonVision photonVision;
     private boolean alsoDrive;
     private boolean initialFieldRel;
     private boolean finished;
+
     /**
      * @param robotDrive the drive subsystem
      */
-    public AlignToTag (DriveBase robotDrive, PhotonVision photonVision, boolean alsoDrive, boolean initialFieldRel) {
+    public AlignToTag (CommandSwerveDrivetrain robotDrive, PhotonVision photonVision, boolean alsoDrive, 
+                       boolean initialFieldRel) {
+
         this.robotDrive = robotDrive;
         this.photonVision = photonVision;
         this.alsoDrive = alsoDrive;
@@ -44,14 +46,14 @@ public class AlignToTag extends Command {
         Util.consoleLog();
 
         // store the initial field relative state to reset it later.
-        initialFieldRel = robotDrive.getFieldRelative();
+        //initialFieldRel = robotDrive.getFieldRelative(); rich
         
         finished = false;
         
-        if (initialFieldRel) robotDrive.toggleFieldRelative();
+        //if (initialFieldRel) robotDrive.toggleFieldRelative(); rich
         
-        robotDrive.enableTracking();
-        robotDrive.enableCoralTrackingSlowMode();
+        //robotDrive.enableTracking(); rich
+        //robotDrive.enableCoralTrackingSlowMode(); rich
         
         rotationController.setSetpoint(0);
         rotationController.setTolerance(0.5);
@@ -74,8 +76,8 @@ public class AlignToTag extends Command {
       if (target == null) Util.consoleLog("target is null");
 
       if (target == null) {
-        robotDrive.setTrackingRotation(Double.NaN); // temporarily disable tracking
-        robotDrive.clearPPRotationOverride();
+        //robotDrive.setTrackingRotation(Double.NaN); // temporarily disable tracking rich
+        //robotDrive.clearPPRotationOverride(); rich
         return;
       }
 
@@ -84,10 +86,10 @@ public class AlignToTag extends Command {
 
         Util.consoleLog("in[yaw=%f, pitch=%f] out[rot=%f]", target.getYaw(), target.getPitch(), rotation);
 
-        if (alsoDrive)
-            robotDrive.driveRobotRelative(0, 0, rotation);
-        else
-            robotDrive.setTrackingRotation(rotation);
+        //if (alsoDrive)
+            //robotDrive.driveRobotRelative(0, 0, rotation); rich
+        //else
+            //robotDrive.setTrackingRotation(rotation); rich
 
         if(rotation < 0.07) finished = true;
     }
@@ -103,14 +105,14 @@ public class AlignToTag extends Command {
     public void end(boolean interrupted) {
         Util.consoleLog("interrupted=%b", interrupted);
         
-        if (alsoDrive) robotDrive.drive(0, 0, 0, false);
+        //if (alsoDrive) robotDrive.drive(0, 0, 0, false); rich
         
-        if (initialFieldRel) robotDrive.toggleFieldRelative(); // restore beginning state
+        //if (initialFieldRel) robotDrive.toggleFieldRelative(); // restore beginning state rich
         
-        robotDrive.setTrackingRotation(Double.NaN);
-        robotDrive.disableTracking();
-        robotDrive.disableTrackingSlowMode();
-        robotDrive.clearPPRotationOverride();
+        //robotDrive.setTrackingRotation(Double.NaN); rich
+        //robotDrive.disableTracking(); rich
+        //robotDrive.disableTrackingSlowMode(); rich
+        //robotDrive.clearPPRotationOverride(); rich
 
         SmartDashboard.putString("AlignToTag", "Tag Tracking Ended");
     }

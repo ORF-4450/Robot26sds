@@ -2,7 +2,6 @@ package Team4450.Robot26;
 
 import java.util.ArrayList;
 
-import Team4450.Robot26.subsystems.MAXSwerveModule;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Quaternion;
@@ -197,16 +196,16 @@ public class AdvantageScope {
      * @param bl the Back Left MAXSwerveModule object
      * @param br the Back Right MAXSwerveModule object
      */
-    public void setSwerveModules(MAXSwerveModule fl, MAXSwerveModule fr, MAXSwerveModule bl, MAXSwerveModule br) {
-        swerveStates[0] = fl.getState().angle.getDegrees();
-        swerveStates[1] = fl.getState().speedMetersPerSecond;
-        swerveStates[2] = fr.getState().angle.getDegrees();
-        swerveStates[3] = fr.getState().speedMetersPerSecond;
-        swerveStates[4] = bl.getState().angle.getDegrees();
-        swerveStates[5] = bl.getState().speedMetersPerSecond;
-        swerveStates[6] = br.getState().angle.getDegrees();
-        swerveStates[7] = br.getState().speedMetersPerSecond;
-    }
+    // public void setSwerveModules(MAXSwerveModule fl, MAXSwerveModule fr, MAXSwerveModule bl, MAXSwerveModule br) {
+    //     swerveStates[0] = fl.getState().angle.getDegrees();
+    //     swerveStates[1] = fl.getState().speedMetersPerSecond;
+    //     swerveStates[2] = fr.getState().angle.getDegrees();
+    //     swerveStates[3] = fr.getState().speedMetersPerSecond;
+    //     swerveStates[4] = bl.getState().angle.getDegrees();
+    //     swerveStates[5] = bl.getState().speedMetersPerSecond;
+    //     swerveStates[6] = br.getState().angle.getDegrees();
+    //     swerveStates[7] = br.getState().speedMetersPerSecond;
+    //} rich
 
     /**
      * Access the singleton AdvantageScope object for use in code

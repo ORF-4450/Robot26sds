@@ -5,23 +5,38 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 
 import static Team4450.Robot26.Constants.*;
+import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import java.util.function.DoubleSupplier;
 
+import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.ctre.phoenix6.swerve.SwerveRequest;
+
 import Team4450.Lib.LCD;
 import Team4450.Lib.Util;
-import Team4450.Robot26.subsystems.DriveBase;
+import Team4450.Robot26.subsystems.SDS.CommandSwerveDrivetrain;
+import Team4450.Robot26.subsystems.SDS.TunerConstants;
 
 public class DriveCommand extends Command 
 {
-    private final DriveBase driveBase;
+    private final CommandSwerveDrivetrain driveBase;
 
     private final DoubleSupplier throttleSupplier;
     private final DoubleSupplier strafeSupplier;
     private final DoubleSupplier rotationSupplier;
     private final XboxController controller;
-    
-    public DriveCommand(DriveBase driveBase,
+
+    private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
+    private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+
+    private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
+            .withDeadband(MaxSpeed * DRIVE_DEADBAND)
+            .withRotationalDeadband(MaxAngularRate * ROTATION_DEADBAND) // Add a 10% deadband
+            .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
+
+    public DriveCommand(CommandSwerveDrivetrain driveBase,
                         DoubleSupplier throttleSupplier,
                         DoubleSupplier strafeSupplier,
                         DoubleSupplier rotationSupplier,
@@ -55,11 +70,11 @@ public class DriveCommand extends Command
             rotationSupplier.getAsDouble()
         );
 
-        LCD.printLine(3, "lx=%.3f  ly=%.3f  yaw=%.3f",
+        LCD.printLine(3, "lx=%.3f  ly=%.3f", // yaw=%.3f",
             controller.getLeftX(),
-            controller.getLeftY(),
+            controller.getLeftY()
             //driveBase.getGyroRotation2d().getDegrees(),
-            driveBase.getGyroYaw()
+            //driveBase.getGyroYaw() rich
         );
 
         // This is the default command for the DriveBase. When running in autonmous, the auto commands
@@ -71,9 +86,13 @@ public class DriveCommand extends Command
         
         if (robot.isAutonomous()) return;
 
-        double throttle = deadband(throttleSupplier.getAsDouble(), DRIVE_DEADBAND);
-        double strafe = deadband(strafeSupplier.getAsDouble(), DRIVE_DEADBAND);
-        double rotation = deadband(rotationSupplier.getAsDouble(), ROTATION_DEADBAND);
+        //double throttle = deadband(throttleSupplier.getAsDouble(), DRIVE_DEADBAND);
+        //double strafe = deadband(strafeSupplier.getAsDouble(), DRIVE_DEADBAND);
+        //double rotation = deadband(rotationSupplier.getAsDouble(), ROTATION_DEADBAND);
+
+        double throttle = throttleSupplier.getAsDouble();
+        double strafe = strafeSupplier.getAsDouble();
+        double rotation = rotationSupplier.getAsDouble();
 
         // throttle = Util.squareInput(throttle);
         // strafe = Util.squareInput(strafe);
@@ -81,14 +100,18 @@ public class DriveCommand extends Command
         // rotation = Math.pow(rotation, 5);
 
         // Have to invert for sim...not sure why.
-        if (RobotBase.isSimulation()) rotation *= -1;
+        //if (RobotBase.isSimulation()) rotation *= -1; rich
         
-        driveBase.drive(throttle, strafe, rotation, true);
+        //driveBase.drive(throttle, strafe, rotation, true); rich
 
-        //driveBase.talon_FX.set(throttle);
+        driveBase.applyRequest(() ->
+            drive.withVelocityX(throttle * MaxSpeed) // Drive forward with negative Y (forward)
+                 .withVelocityY(strafe * MaxSpeed) // Drive left with negative X (left)
+                 .withRotationalRate(rotation * MaxAngularRate) // Drive counterclockwise with negative X (left)
+        );
     }
 
-    @Override
+    @Override 
     public void end(boolean interrupted) 
     {
         Util.consoleLog("interrupted=%b", interrupted);
