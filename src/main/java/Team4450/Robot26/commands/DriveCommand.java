@@ -116,11 +116,15 @@ public class DriveCommand extends Command
     
 	public void toggleFieldRelativeDriving() // rich
 	{
+        Util.consoleLog();
+        
 		fieldRelativeDriving = !fieldRelativeDriving;
 	}
 
     public void toggleSlowMode() // rich
     {
+        Util.consoleLog();
+
         slowMode = !slowMode;
 
         if (slowMode)
