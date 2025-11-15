@@ -70,6 +70,7 @@ public class UpdateVisionPose extends Command {
             );
             
             //robotDrive.updateOdometryVision(pose2d, estimatedPoseContainer.timestampSeconds); rich
+            robotDrive.addVisionMeasurement(pose2d, estimatedPoseContainer.timestampSeconds); // rich
         }
     }
 

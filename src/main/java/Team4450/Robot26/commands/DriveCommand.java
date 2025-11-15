@@ -19,10 +19,13 @@ public class DriveCommand extends Command
 {
     private final CommandSwerveDrivetrain driveBase;
 
-    private final DoubleSupplier throttleSupplier;
-    private final DoubleSupplier strafeSupplier;
-    private final DoubleSupplier rotationSupplier;
-    private final XboxController controller;
+    private final DoubleSupplier    throttleSupplier;
+    private final DoubleSupplier    strafeSupplier;
+    private final DoubleSupplier    rotationSupplier;
+    private final XboxController    controller;
+
+    private boolean                 fieldRelativeDriving = true, slowMode = false;
+    private double                  driveSlowfactor = 1.0, rotateSlowfactor = 1.0;
 
     private final SwerveRequest.FieldCentric driveField = new SwerveRequest.FieldCentric()
             .withDeadband(kMaxSpeed * DRIVE_DEADBAND)
@@ -84,16 +87,16 @@ public class DriveCommand extends Command
         
         if (robot.isAutonomous()) return;
 
-        double throttle = throttleSupplier.getAsDouble();
-        double strafe = strafeSupplier.getAsDouble();
-        double rotation = rotationSupplier.getAsDouble();
+        double throttle = throttleSupplier.getAsDouble() * driveSlowfactor;
+        double strafe = strafeSupplier.getAsDouble() * driveSlowfactor;
+        double rotation = rotationSupplier.getAsDouble() * rotateSlowfactor;
 
         // throttle = Util.squareInput(throttle);
         // strafe = Util.squareInput(strafe);
         // rotation = Util.squareInput(rotation);
         // rotation = Math.pow(rotation, 5);
 
-        if (RobotContainer.fieldRelativeDriving)
+        if (fieldRelativeDriving)
             driveBase.setControl(
                 driveField.withVelocityX(throttle * kMaxSpeed) 
                           .withVelocityY(strafe * kMaxSpeed) 
@@ -109,5 +112,21 @@ public class DriveCommand extends Command
     public void end(boolean interrupted) 
     {
         Util.consoleLog("interrupted=%b", interrupted);
+    }
+    
+	public void toggleFieldRelativeDriving() // rich
+	{
+		fieldRelativeDriving = !fieldRelativeDriving;
+	}
+
+    public void toggleSlowMode() // rich
+    {
+        slowMode = !slowMode;
+
+        if (slowMode)
+        {
+            driveSlowfactor = kSlowModeFactor;
+            rotateSlowfactor = kRotSlowModeFactor;
+        } else driveSlowfactor = rotateSlowfactor = 1.0;
     }
 }

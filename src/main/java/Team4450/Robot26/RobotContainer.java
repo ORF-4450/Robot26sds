@@ -52,9 +52,9 @@ public class RobotContainer
 
 	public static ShuffleBoard			 shuffleBoard;
 	public final CommandSwerveDrivetrain driveBase;
+	public final DriveCommand			 driveCommand;
 	private Candle        				 candle = null;
-	public static boolean				 fieldRelativeDriving = true;
-
+	
 	// Subsystem Default Commands.
 
     // Persistent Commands.
@@ -87,21 +87,22 @@ public class RobotContainer
 	private Compressor				pcm = new Compressor(PneumaticsModuleType.REVPH);
 
 	// Navigation board.
-	//public static NavX			navx; rich
 	public Pigeon2					pigeon;
 
-	private MonitorPDP     		monitorPDPThread;
-	private MonitorCompressorPH	monitorCompressorThread;
-    private CameraFeed			cameraFeed;
+	private MonitorPDP     			monitorPDPThread;
+	private MonitorCompressorPH		monitorCompressorThread;
+    private CameraFeed				cameraFeed;
     
 	// Trajectories we load manually.
 	//public static PathPlannerTrajectory	ppTestTrajectory;
 
 	private static SendableChooser<Command>	autoChooser;
 	
-	private static String 					autonomousCommandName = "none";
+	private static String 			autonomousCommandName = "none";
 
-    private final Telemetry 	logger = new Telemetry(kMaxSpeed);
+    private final Telemetry 		logger = new Telemetry(kMaxSpeed);
+    
+	private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
 
 	/**
 	 * The container for the robot. Contains subsystems, Opertor Interface devices, and commands.
@@ -210,11 +211,19 @@ public class RobotContainer
 		// Note that the controller instance is passed to the drive command for use in displaying
 		// debugging information on Shuffleboard. It is not required for the driving function.
 
-		driveBase.setDefaultCommand(new DriveCommand(driveBase,
+		driveCommand = new DriveCommand(driveBase,
 		 							() -> driverController.getLeftY(),
 									driverController.getLeftXDS(), 
 									driverController.getRightXDS(),
-									driverController));
+									driverController);
+
+		driveBase.setDefaultCommand(driveCommand);
+
+		// driveBase.setDefaultCommand(new DriveCommand(driveBase,
+		//  							() -> driverController.getLeftY(),
+		// 							driverController.getLeftXDS(), 
+		// 							driverController.getRightXDS(),
+		// 							driverController));
 
 		// Idle while the robot is disabled. This ensures the configured
         // neutral mode is applied to the drive motors while disabled.
@@ -340,22 +349,21 @@ public class RobotContainer
 		//		), driveBase, false
 		//));
 
-		// toggle slow-mode
-		// new Trigger(() -> driverController.getLeftBumperButton())  rich
-		// 	.onTrue(new InstantCommand(driveBase::enableSlowMode))
-		// 	.onFalse(new InstantCommand(driveBase::disableSlowMode));
+		// Toggle slow-mode
+		new Trigger(() -> driverController.getLeftBumperButton())  // rich
+		 	.onChange(new InstantCommand(driveCommand::toggleSlowMode));
 
-		// reset field orientation (direction).
-		// new Trigger(() -> driverController.getStartButton()) rich
-		// 	.onTrue(new InstantCommand(driveBase::zeroGyro));
+		// Reset field orientation (direction).
+		new Trigger(() -> driverController.getStartButton()) // rich
+			.onTrue(driveBase.runOnce(() -> driveBase.seedFieldCentric()));
 
-		// toggle field-oriented driving mode.
-		new Trigger(() -> driverController.getAButton()) //rich
-		 	.onTrue(new InstantCommand(this::toggleFieldRelativeDriving));
+		// Toggle field-oriented driving mode.
+		new Trigger(() -> driverController.getAButton()) // rich
+		 	.onTrue(new InstantCommand(driveCommand::toggleFieldRelativeDriving));
 
-		//Holding Right D-Pad button sets X pattern to stop movement.
-		// new Trigger(() -> driverController.getPOV() == 90) rich
-		// 		.onTrue(new RunCommand(() -> driveBase.setX(), driveBase));
+		// Right D-Pad button sets X pattern to stop movement.
+		new Trigger(() -> driverController.getPOV() == 90) // rich
+			.onTrue(driveBase.applyRequest(() -> brake));
 			
 		// -------- Utility pad buttons ----------
 
@@ -450,11 +458,6 @@ public class RobotContainer
 		
 		if (monitorPDPThread != null) monitorPDPThread.reset();
     }
-
-	private void toggleFieldRelativeDriving()
-	{
-		fieldRelativeDriving = !fieldRelativeDriving;
-	}
 
 	// public void fixPathPlannerGyro() { rich
 	// 	driveBase.fixPathPlannerGyro();

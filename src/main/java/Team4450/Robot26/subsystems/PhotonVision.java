@@ -91,6 +91,7 @@ public class PhotonVision extends SubsystemBase
         fieldLayout = AprilTagFieldLayout.loadField(fields);
         camera = new PhotonCamera(cameraName);
         fieldLayout = AprilTagFieldLayout.loadField(fields);
+        
         if (pipelineType == PipelineType.POSE_ESTIMATION) {
             // setup the AprilTag pose etimator.
             poseEstimator = new PhotonPoseEstimator(
@@ -100,8 +101,10 @@ public class PhotonVision extends SubsystemBase
                 robotToCam
             );
         }
+
 		Util.consoleLog("PhotonVision (%s) created!", cameraName);
-        SmartDashboard.putData(field);
+        
+        //SmartDashboard.putData(field); rich
 	}
 
     /**
@@ -125,6 +128,7 @@ public class PhotonVision extends SubsystemBase
 
     public Optional<PhotonPipelineResult> getLatestResult() {
         List<PhotonPipelineResult> targets = camera.getAllUnreadResults();
+
         if (targets.isEmpty()) {
             if (latestResult == null) {
                 return Optional.empty();
@@ -134,6 +138,7 @@ public class PhotonVision extends SubsystemBase
             // Latest one will be the last because it is an FIFO list.
             latestResult = targets.get(targets.size() - 1);
         }
+
         return Optional.of(latestResult);
     }
 
@@ -143,11 +148,13 @@ public class PhotonVision extends SubsystemBase
 
         return latestResult.hasTargets();
     }
+    
     public PhotonTrackedTarget getClosestTarget() {
         PhotonTrackedTarget closest; // will hold the current closest for replacement or return
 
         if (latestResult != null && latestResult.hasTargets()) {
             List<PhotonTrackedTarget> targets = latestResult.getTargets();
+            
             closest = targets.get(0); // start with first target
 
             for (int i = 0; i < targets.size(); i++) {
@@ -155,6 +162,7 @@ public class PhotonVision extends SubsystemBase
                     // if it's closer that closest, replace closest with it!
                     closest = targets.get(i);
             }
+
             return closest;
         }
         else
@@ -172,6 +180,7 @@ public class PhotonVision extends SubsystemBase
         PhotonPipelineResult photonResultToUse;
 
         List<PhotonPipelineResult> targets = camera.getAllUnreadResults();
+        
         if (targets.isEmpty()) {
             if (latestResult == null) {
                 return Optional.empty();
@@ -181,6 +190,7 @@ public class PhotonVision extends SubsystemBase
             // Latest one will be the last because it is an FIFO list.
             latestResult = targets.get(targets.size() - 1);
         }
+        
         photonResultToUse = latestResult;
 
         Optional<EstimatedRobotPose> estimatedPoseOptional = poseEstimator.update(photonResultToUse);
@@ -200,7 +210,6 @@ public class PhotonVision extends SubsystemBase
             // for example:
             ArrayList<Pose3d> usedTagPoses = new ArrayList<Pose3d>();
 
-
             for (int i = 0; i < estimatedPose.targetsUsed.size(); i++) {
                 int id = estimatedPose.targetsUsed.get(i).getFiducialId();
                 // if a target was used with ID > 16 then return no estimated pose
@@ -208,11 +217,9 @@ public class PhotonVision extends SubsystemBase
                     return Optional.empty();
                 }
 
-
                 Optional<Pose3d> tagPose = fieldLayout.getTagPose(id);
 
-                if (tagPose.isPresent())
-                    usedTagPoses.add(tagPose.get());
+                if (tagPose.isPresent()) usedTagPoses.add(tagPose.get());
             }
 
             return Optional.of(estimatedPose);
