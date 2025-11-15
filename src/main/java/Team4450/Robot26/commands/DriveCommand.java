@@ -1,14 +1,7 @@
 package Team4450.Robot26.commands;
 
-import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
-
-import static Team4450.Robot26.Constants.*;
-import static edu.wpi.first.units.Units.MetersPerSecond;
-import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static edu.wpi.first.units.Units.RotationsPerSecond;
-
 import java.util.function.DoubleSupplier;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -16,8 +9,11 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import Team4450.Lib.LCD;
 import Team4450.Lib.Util;
+import Team4450.Robot26.RobotContainer;
 import Team4450.Robot26.subsystems.SDS.CommandSwerveDrivetrain;
-import Team4450.Robot26.subsystems.SDS.TunerConstants;
+import static Team4450.Robot26.Constants.*;
+import static Team4450.Robot26.Constants.DriveConstants.*;
+
 
 public class DriveCommand extends Command 
 {
@@ -28,12 +24,14 @@ public class DriveCommand extends Command
     private final DoubleSupplier rotationSupplier;
     private final XboxController controller;
 
-    private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
-    private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+    private final SwerveRequest.FieldCentric driveField = new SwerveRequest.FieldCentric()
+            .withDeadband(kMaxSpeed * DRIVE_DEADBAND)
+            .withRotationalDeadband(kMaxAngularRate * ROTATION_DEADBAND) // Add deadbands
+            .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
 
-    private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-            .withDeadband(MaxSpeed * DRIVE_DEADBAND)
-            .withRotationalDeadband(MaxAngularRate * ROTATION_DEADBAND) // Add a 10% deadband
+    private final SwerveRequest.RobotCentric driveRobot = new SwerveRequest.RobotCentric()
+            .withDeadband(kMaxSpeed * DRIVE_DEADBAND)
+            .withRotationalDeadband(kMaxAngularRate * ROTATION_DEADBAND) // Add deadbands
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
 
     public DriveCommand(CommandSwerveDrivetrain driveBase,
@@ -86,10 +84,6 @@ public class DriveCommand extends Command
         
         if (robot.isAutonomous()) return;
 
-        //double throttle = deadband(throttleSupplier.getAsDouble(), DRIVE_DEADBAND);
-        //double strafe = deadband(strafeSupplier.getAsDouble(), DRIVE_DEADBAND);
-        //double rotation = deadband(rotationSupplier.getAsDouble(), ROTATION_DEADBAND);
-
         double throttle = throttleSupplier.getAsDouble();
         double strafe = strafeSupplier.getAsDouble();
         double rotation = rotationSupplier.getAsDouble();
@@ -99,34 +93,21 @@ public class DriveCommand extends Command
         // rotation = Util.squareInput(rotation);
         // rotation = Math.pow(rotation, 5);
 
-        // Have to invert for sim...not sure why.
-        //if (RobotBase.isSimulation()) rotation *= -1; rich
-        
-        //driveBase.drive(throttle, strafe, rotation, true); rich
-
-        driveBase.applyRequest(() ->
-            drive.withVelocityX(throttle * MaxSpeed) // Drive forward with negative Y (forward)
-                 .withVelocityY(strafe * MaxSpeed) // Drive left with negative X (left)
-                 .withRotationalRate(rotation * MaxAngularRate) // Drive counterclockwise with negative X (left)
-        );
+        if (RobotContainer.fieldRelativeDriving)
+            driveBase.setControl(
+                driveField.withVelocityX(throttle * kMaxSpeed) 
+                          .withVelocityY(strafe * kMaxSpeed) 
+                          .withRotationalRate(rotation * kMaxAngularRate));
+        else
+            driveBase.setControl(
+                driveRobot.withVelocityX(throttle * kMaxSpeed) 
+                          .withVelocityY(strafe * kMaxSpeed) 
+                          .withRotationalRate(rotation * kMaxAngularRate));
     }
 
     @Override 
     public void end(boolean interrupted) 
     {
         Util.consoleLog("interrupted=%b", interrupted);
-
-        //driveBase.drive(0.0, 0.0, 0.0);
     }
- 
-    private static double deadband(double value, double deadband) 
-    {
-        return Math.abs(value) > deadband ? value : 0.0;
-    }
-
-    // commented out because Util.squareInput does this already and it was giving an error
-    // private static double squareTheInput(double value) 
-    // {
-    //     return Math.copySign(value * value, value);
-    // }
 }

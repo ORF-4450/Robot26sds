@@ -2,7 +2,10 @@
 package Team4450.Robot26;
 
 import static Team4450.Robot26.Constants.*;
+import static Team4450.Robot26.Constants.DriveConstants.*;
 
+import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.PathPlannerAuto;
@@ -11,6 +14,7 @@ import Team4450.Robot26.commands.DriveCommand;
 import Team4450.Robot26.subsystems.Candle;
 import Team4450.Robot26.subsystems.ShuffleBoard;
 import Team4450.Robot26.subsystems.SDS.CommandSwerveDrivetrain;
+import Team4450.Robot26.subsystems.SDS.Telemetry;
 import Team4450.Robot26.subsystems.SDS.TunerConstants;
 import Team4450.Lib.MonitorPDP;
 import Team4450.Lib.NavX;
@@ -49,6 +53,7 @@ public class RobotContainer
 	public static ShuffleBoard			 shuffleBoard;
 	public final CommandSwerveDrivetrain driveBase;
 	private Candle        				 candle = null;
+	public static boolean				 fieldRelativeDriving = true;
 
 	// Subsystem Default Commands.
 
@@ -82,7 +87,8 @@ public class RobotContainer
 	private Compressor				pcm = new Compressor(PneumaticsModuleType.REVPH);
 
 	// Navigation board.
-	public static NavX			navx;
+	//public static NavX			navx; rich
+	public Pigeon2					pigeon;
 
 	private MonitorPDP     		monitorPDPThread;
 	private MonitorCompressorPH	monitorCompressorThread;
@@ -94,6 +100,8 @@ public class RobotContainer
 	private static SendableChooser<Command>	autoChooser;
 	
 	private static String 					autonomousCommandName = "none";
+
+    private final Telemetry 	logger = new Telemetry(kMaxSpeed);
 
 	/**
 	 * The container for the robot. Contains subsystems, Opertor Interface devices, and commands.
@@ -137,20 +145,6 @@ public class RobotContainer
     
 		resetFaults();
 
-		// Create NavX object here since must done before CameraFeed is created (don't remember why).
-        // Navx calibrates at power on and must complete before robot moves. Takes ~1 second for 2nd
-        // generation Navx ~15 seconds for classic Navx. We assume there will be enough time between
-        // power on and our first movement because normally things don't happen that fast
-
-		// Warning: The navx instance is shared with the swerve drive code. Resetting or otherwise
-		// manipulating the navx (as opposed to just reading data) may crash the swerve drive code.
-
-		navx = NavX.getInstance();
-
-		// Add navx as a Sendable. Updates the dashboard heading indicator automatically.
- 		
-		SmartDashboard.putData("Gyro2", navx);
-
 		// Invert driving joy sticks Y axis so + values mean forward.
 		// Invert driving joy sticks X axis so + values mean right.
 	  
@@ -162,7 +156,13 @@ public class RobotContainer
 		shuffleBoard = new ShuffleBoard();
 
 		driveBase = TunerConstants.createDrivetrain();
-		
+
+ 		// Add gyro as a Sendable. Updates the dashboard heading indicator automatically.
+ 		
+		 pigeon = driveBase.getPigeon2();
+
+		 SmartDashboard.putData("Gyro2", pigeon); //rich
+		 
 		// if (RobotBase.isReal()) 
 		// {
 		// 	candle = new Candle(CTRE_CANDLE, 8+26);
@@ -215,11 +215,12 @@ public class RobotContainer
 									driverController.getLeftXDS(), 
 									driverController.getRightXDS(),
 									driverController));
-		
+
 		// Idle while the robot is disabled. This ensures the configured
         // neutral mode is applied to the drive motors while disabled.
         
 		final var idle = new SwerveRequest.Idle();
+
         RobotModeTriggers.disabled().whileTrue(
             driveBase.applyRequest(() -> idle).ignoringDisable(true)
         );
@@ -257,15 +258,13 @@ public class RobotContainer
 			} catch (Exception e) { }
 		  }).start();
 
-		// Log info about NavX.
+		// Check Gyr0.
 	  
-		navx.dumpValuesToNetworkTables();
- 		
-		if (navx.isConnected())
-			Util.consoleLog("NavX connected version=%s", navx.getAHRS().getFirmwareVersion());
+		if (pigeon.isConnected())
+			Util.consoleLog("Pigeon connected version=%s", pigeon.getVersion());
 		else
 		{
-			Exception e = new Exception("NavX is NOT connected!");
+			Exception e = new Exception("Pigeon is NOT connected!");
 			Util.logException(e);
 		}
         
@@ -277,6 +276,8 @@ public class RobotContainer
 		
         configureButtonBindings();
         
+        driveBase.registerTelemetry(logger::telemeterize);
+
         // Load any trajectory files in a separate thread on first scheduler run.
         // We do this because trajectory loads can take up to 10 seconds to load so we want this
         // being done while we are getting started up. Hopefully will complete before we are ready to
@@ -349,8 +350,8 @@ public class RobotContainer
 		// 	.onTrue(new InstantCommand(driveBase::zeroGyro));
 
 		// toggle field-oriented driving mode.
-		// new Trigger(() -> driverController.getAButton()) rich
-		// 	.onTrue(new InstantCommand(driveBase::toggleFieldRelative));
+		new Trigger(() -> driverController.getAButton()) //rich
+		 	.onTrue(new InstantCommand(this::toggleFieldRelativeDriving));
 
 		//Holding Right D-Pad button sets X pattern to stop movement.
 		// new Trigger(() -> driverController.getPOV() == 90) rich
@@ -449,6 +450,11 @@ public class RobotContainer
 		
 		if (monitorPDPThread != null) monitorPDPThread.reset();
     }
+
+	private void toggleFieldRelativeDriving()
+	{
+		fieldRelativeDriving = !fieldRelativeDriving;
+	}
 
 	// public void fixPathPlannerGyro() { rich
 	// 	driveBase.fixPathPlannerGyro();
