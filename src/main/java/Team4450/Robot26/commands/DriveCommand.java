@@ -10,6 +10,7 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import Team4450.Lib.LCD;
 import Team4450.Lib.Util;
 import Team4450.Robot26.RobotContainer;
+import Team4450.Robot26.subsystems.DriveBase;
 import Team4450.Robot26.subsystems.SDS.CommandSwerveDrivetrain;
 import static Team4450.Robot26.Constants.*;
 import static Team4450.Robot26.Constants.DriveConstants.*;
@@ -17,27 +18,14 @@ import static Team4450.Robot26.Constants.DriveConstants.*;
 
 public class DriveCommand extends Command 
 {
-    private final CommandSwerveDrivetrain driveBase;
+    private final DriveBase         driveBase;
 
     private final DoubleSupplier    throttleSupplier;
     private final DoubleSupplier    strafeSupplier;
     private final DoubleSupplier    rotationSupplier;
     private final XboxController    controller;
 
-    private boolean                 fieldRelativeDriving = true, slowMode = false;
-    private double                  driveSlowfactor = 1.0, rotateSlowfactor = 1.0;
-
-    private final SwerveRequest.FieldCentric driveField = new SwerveRequest.FieldCentric()
-            .withDeadband(kMaxSpeed * DRIVE_DEADBAND)
-            .withRotationalDeadband(kMaxAngularRate * ROTATION_DEADBAND) // Add deadbands
-            .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
-
-    private final SwerveRequest.RobotCentric driveRobot = new SwerveRequest.RobotCentric()
-            .withDeadband(kMaxSpeed * DRIVE_DEADBAND)
-            .withRotationalDeadband(kMaxAngularRate * ROTATION_DEADBAND) // Add deadbands
-            .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
-
-    public DriveCommand(CommandSwerveDrivetrain driveBase,
+    public DriveCommand(DriveBase      driveBase,
                         DoubleSupplier throttleSupplier,
                         DoubleSupplier strafeSupplier,
                         DoubleSupplier rotationSupplier,
@@ -87,50 +75,21 @@ public class DriveCommand extends Command
         
         if (robot.isAutonomous()) return;
 
-        double throttle = throttleSupplier.getAsDouble() * driveSlowfactor;
-        double strafe = strafeSupplier.getAsDouble() * driveSlowfactor;
-        double rotation = rotationSupplier.getAsDouble() * rotateSlowfactor;
+        double throttle = throttleSupplier.getAsDouble() ;
+        double strafe = strafeSupplier.getAsDouble();
+        double rotation = rotationSupplier.getAsDouble();
 
         // throttle = Util.squareInput(throttle);
         // strafe = Util.squareInput(strafe);
         // rotation = Util.squareInput(rotation);
         // rotation = Math.pow(rotation, 5);
 
-        if (fieldRelativeDriving)
-            driveBase.setControl(
-                driveField.withVelocityX(throttle * kMaxSpeed) 
-                          .withVelocityY(strafe * kMaxSpeed) 
-                          .withRotationalRate(rotation * kMaxAngularRate));
-        else
-            driveBase.setControl(
-                driveRobot.withVelocityX(throttle * kMaxSpeed) 
-                          .withVelocityY(strafe * kMaxSpeed) 
-                          .withRotationalRate(rotation * kMaxAngularRate));
+        driveBase.drive(throttle, strafe, rotation);
     }
 
     @Override 
     public void end(boolean interrupted) 
     {
         Util.consoleLog("interrupted=%b", interrupted);
-    }
-    
-	public void toggleFieldRelativeDriving() // rich
-	{
-        Util.consoleLog();
-        
-		fieldRelativeDriving = !fieldRelativeDriving;
-	}
-
-    public void toggleSlowMode() // rich
-    {
-        Util.consoleLog();
-
-        slowMode = !slowMode;
-
-        if (slowMode)
-        {
-            driveSlowfactor = kSlowModeFactor;
-            rotateSlowfactor = kRotSlowModeFactor;
-        } else driveSlowfactor = rotateSlowfactor = 1.0;
     }
 }

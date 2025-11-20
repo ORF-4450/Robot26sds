@@ -2,22 +2,15 @@
 package Team4450.Robot26;
 
 import static Team4450.Robot26.Constants.*;
-import static Team4450.Robot26.Constants.DriveConstants.*;
-
-import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
-import com.ctre.phoenix6.hardware.Pigeon2;
-import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.commands.FollowPathCommand;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 
 import Team4450.Robot26.commands.DriveCommand;
 import Team4450.Robot26.subsystems.Candle;
+import Team4450.Robot26.subsystems.DriveBase;
 import Team4450.Robot26.subsystems.ShuffleBoard;
-import Team4450.Robot26.subsystems.SDS.CommandSwerveDrivetrain;
-import Team4450.Robot26.subsystems.SDS.Telemetry;
-import Team4450.Robot26.subsystems.SDS.TunerConstants;
 import Team4450.Lib.MonitorPDP;
-import Team4450.Lib.NavX;
 import Team4450.Lib.Util;
 import Team4450.Lib.CameraFeed;
 import Team4450.Lib.XboxController;
@@ -35,9 +28,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.util.sendable.SendableRegistry;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
-import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 /**
@@ -51,7 +42,7 @@ public class RobotContainer
 	// Subsystems.
 
 	public static ShuffleBoard			 shuffleBoard;
-	public final CommandSwerveDrivetrain driveBase;
+	public static DriveBase				 driveBase;
 	public final DriveCommand			 driveCommand;
 	private Candle        				 candle = null;
 	
@@ -86,9 +77,6 @@ public class RobotContainer
 	// Compressor class controls the CTRE/REV Pneumatics control Module.
 	private Compressor				pcm = new Compressor(PneumaticsModuleType.REVPH);
 
-	// Navigation board.
-	public Pigeon2					pigeon;
-
 	private MonitorPDP     			monitorPDPThread;
 	private MonitorCompressorPH		monitorCompressorThread;
     private CameraFeed				cameraFeed;
@@ -99,10 +87,6 @@ public class RobotContainer
 	private static SendableChooser<Command>	autoChooser;
 	
 	private static String 			autonomousCommandName = "none";
-
-    private final Telemetry 		logger = new Telemetry(kMaxSpeed);
-    
-	private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
 
 	/**
 	 * The container for the robot. Contains subsystems, Opertor Interface devices, and commands.
@@ -156,14 +140,8 @@ public class RobotContainer
 
 		shuffleBoard = new ShuffleBoard();
 
-		driveBase = TunerConstants.createDrivetrain();
+		driveBase = new DriveBase();
 
- 		// Add gyro as a Sendable. Updates the dashboard heading indicator automatically.
- 		
-		 pigeon = driveBase.getPigeon2();
-
-		 SmartDashboard.putData("Gyro2", pigeon); //rich
-		 
 		// if (RobotBase.isReal()) 
 		// {
 		// 	candle = new Candle(CTRE_CANDLE, 8+26);
@@ -219,21 +197,6 @@ public class RobotContainer
 
 		driveBase.setDefaultCommand(driveCommand);
 
-		// driveBase.setDefaultCommand(new DriveCommand(driveBase,
-		//  							() -> driverController.getLeftY(),
-		// 							driverController.getLeftXDS(), 
-		// 							driverController.getRightXDS(),
-		// 							driverController));
-
-		// Idle while the robot is disabled. This ensures the configured
-        // neutral mode is applied to the drive motors while disabled.
-        
-		final var idle = new SwerveRequest.Idle();
-
-        RobotModeTriggers.disabled().whileTrue(
-            driveBase.applyRequest(() -> idle).ignoringDisable(true)
-        );
-
 		//Start the compressor, PDP and camera feed monitoring Tasks.
 
 		monitorCompressorThread = MonitorCompressorPH.getInstance(pcm);
@@ -266,16 +229,6 @@ public class RobotContainer
 				DriverStation.silenceJoystickConnectionWarning(true);
 			} catch (Exception e) { }
 		  }).start();
-
-		// Check Gyr0.
-	  
-		if (pigeon.isConnected())
-			Util.consoleLog("Pigeon connected version=%s", pigeon.getVersion());
-		else
-		{
-			Exception e = new Exception("Pigeon is NOT connected!");
-			Util.logException(e);
-		}
         
         // Configure autonomous routines and send to dashboard.
 		
@@ -284,25 +237,10 @@ public class RobotContainer
 		// Configure the button bindings.
 		
         configureButtonBindings();
-        
-        driveBase.registerTelemetry(logger::telemeterize);
+		
+        // Warmup PathPlanner to avoid Java pauses.
 
-        // Load any trajectory files in a separate thread on first scheduler run.
-        // We do this because trajectory loads can take up to 10 seconds to load so we want this
-        // being done while we are getting started up. Hopefully will complete before we are ready to
-        // use the trajectory.
-		
-		// NotifierCommand loadTrajectory = new NotifierCommand(this::loadTestTrajectory, 0);
-        // loadTrajectory.setRunWhenDisabled(true);
-        // CommandScheduler.getInstance().schedule(loadTrajectory);
-		
-		// //testTrajectory = loadTrajectoryFile("Slalom-1.wpilib.json");
-		
-		// loadTrajectory = new NotifierCommand(this::loadPPTestTrajectory, 0);
-        // loadTrajectory.setRunWhenDisabled(true);
-        // CommandScheduler.getInstance().schedule(loadTrajectory);
-
-		//PathPlannerTrajectory ppTestTrajectory = loadPPTrajectoryFile("richard");
+        FollowPathCommand.warmupCommand().schedule();
 
 		Util.consoleLog(functionMarker);
 	}
@@ -351,19 +289,19 @@ public class RobotContainer
 
 		// Toggle slow-mode
 		new Trigger(() -> driverController.getLeftBumperButton())  // rich
-		 	.onChange(new InstantCommand(driveCommand::toggleSlowMode));
+		 	.onChange(new InstantCommand(driveBase::toggleSlowMode));
 
 		// Reset field orientation (direction).
 		new Trigger(() -> driverController.getStartButton()) // rich
-			.onTrue(driveBase.runOnce(() -> driveBase.seedFieldCentric()));
+			.onTrue(new InstantCommand(driveBase::resetFieldOrientation));
 
 		// Toggle field-oriented driving mode.
 		new Trigger(() -> driverController.getAButton()) // rich
-		 	.onTrue(new InstantCommand(driveCommand::toggleFieldRelativeDriving));
+		 	.onTrue(new InstantCommand(driveBase::toggleFieldRelativeDriving));
 
 		// Right D-Pad button sets X pattern to stop movement.
 		new Trigger(() -> driverController.getPOV() == 90) // rich
-			.onTrue(driveBase.applyRequest(() -> brake));
+			.onTrue(new InstantCommand(driveBase::setX));
 			
 		// -------- Utility pad buttons ----------
 
@@ -461,40 +399,5 @@ public class RobotContainer
 
 	// public void fixPathPlannerGyro() { rich
 	// 	driveBase.fixPathPlannerGyro();
-	// }
-
-	/**
-     * Loads a PathPlanner path file into a path planner trajectory.
-     * @param fileName Name of file. Will automatically look in deploy directory and add the .path ext.
-     * @return The path's trajectory.
-     */
-    // public static PathPlannerTrajectory loadPPTrajectoryFile(String fileName)
-    // {
-    //     PathPlannerTrajectory  	trajectory;
-    //     Path        			trajectoryFilePath;
-
-	// 	// We fab up the full path for tracing but the loadPath() function does it's own
-	// 	// thing constructing a path from just the filename.
-	// 	trajectoryFilePath = Filesystem.getDeployDirectory().toPath().resolve("pathplanner/" + fileName + ".path");
-
-	// 	Util.consoleLog("loading PP trajectory: %s", trajectoryFilePath);
-		
-	// 	trajectory = PathPlanner.loadPath(fileName,
-	// 									  new PathConstraints(MAX_WHEEL_SPEED, MAX_WHEEL_ACCEL));
-
-	// 	if (trajectory == null) 
-	// 	{
-	// 		Util.consoleLog("Unable to open pp trajectory: " + fileName);
-	// 		throw new RuntimeException("Unable to open PP trajectory: " + fileName);
-	// 	}
-
-    //     Util.consoleLog("PP trajectory loaded: %s", fileName);
-
-    //     return trajectory;
-    // }
-
-	// private void loadPPTestTrajectory()
-	// {
-	// 	ppTestTrajectory = loadPPTrajectoryFile("Test-Path");
 	// }
 }
