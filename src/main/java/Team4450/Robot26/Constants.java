@@ -7,18 +7,9 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import java.util.Properties;
 
-import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
-
 import Team4450.Robot26.subsystems.SDS.TunerConstants;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 
 /**
@@ -31,7 +22,7 @@ import edu.wpi.first.wpilibj.DriverStation;
  */
 public final class Constants
 {
-	public static String		PROGRAM_NAME = "RAC26sds-11.20.25";
+	public static String		PROGRAM_NAME = "RAC26sds-12.02.25";
 
 	public static Robot			robot;
 
@@ -97,20 +88,9 @@ public final class Constants
         public static final double kSlowModeFactor = .20; // 50% of normal.
         public static final double kRotSlowModeFactor = .20; // 20% of normal.
 
-        // Chassis configuration:
-      
-        // Distance between centers of right and left wheels
-        //public static final double kTrackWidth = Units.inchesToMeters(23.5);
-
-        // Distance between front and back wheel centers
-      
-        //public static final double kWheelBase = Units.inchesToMeters(23.5);
-
-        // Drive base radius in meters. Distance from robot center to furthest module.
-        public static final double kDriveBaseRadius = .42;
-
-        public static final Pose2d	DEFAULT_STARTING_POSE = new Pose2d(7.473, .559, Rotation2d.fromDegrees(0));
-        //public static final Pose2d	DEFAULT_STARTING_POSE = new Pose2d(0, 0, Rotation2d.fromDegrees(0));
+        // Starting pose for sim. Is lower left corner (blue) or where we want sim robot to start.
+        //public static final Pose2d	DEFAULT_STARTING_POSE = new Pose2d(7.473, .559, Rotation2d.kZero);
+        public static final Pose2d	DEFAULT_STARTING_POSE = new Pose2d(0, 0, Rotation2d.kZero);
     }
 
     // public static final class AutoConstants {

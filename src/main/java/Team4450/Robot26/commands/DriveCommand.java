@@ -4,17 +4,10 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import java.util.function.DoubleSupplier;
 
-import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
-import com.ctre.phoenix6.swerve.SwerveRequest;
-
 import Team4450.Lib.LCD;
 import Team4450.Lib.Util;
-import Team4450.Robot26.RobotContainer;
 import Team4450.Robot26.subsystems.DriveBase;
-import Team4450.Robot26.subsystems.SDS.CommandSwerveDrivetrain;
 import static Team4450.Robot26.Constants.*;
-import static Team4450.Robot26.Constants.DriveConstants.*;
-
 
 public class DriveCommand extends Command 
 {

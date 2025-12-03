@@ -3,8 +3,8 @@ package Team4450.Robot26.subsystems;
 import static Team4450.Robot26.Constants.*;
 import static Team4450.Robot26.Constants.DriveConstants.*;
 
-import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.ctre.phoenix6.swerve.SwerveRequest.ForwardPerspectiveValue;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import Team4450.Lib.Util;
@@ -13,6 +13,7 @@ import Team4450.Robot26.subsystems.SDS.CommandSwerveDrivetrain;
 import Team4450.Robot26.subsystems.SDS.TunerConstants;
 import Team4450.Robot26.subsystems.SDS.Telemetry;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
@@ -26,7 +27,7 @@ public class DriveBase extends SubsystemBase
 {
     private CommandSwerveDrivetrain     sdsDriveBase = TunerConstants.createDrivetrain();
 
-    public Gyro                         gyro = new Gyro(sdsDriveBase.getPigeon2());
+    public PigeonWrapper                gyro = new PigeonWrapper(sdsDriveBase.getPigeon2());
     
     private final Telemetry     		logger = new Telemetry(kMaxSpeed);
     
@@ -73,10 +74,18 @@ public class DriveBase extends SubsystemBase
             sdsDriveBase.applyRequest(() -> idle).ignoringDisable(true)
         );
 
-        // Set tracking of robot field position at starting point.
+        // Set tracking of robot field position at starting point. Blue perspective.
         // note that this doesn't really do much because PathPlanner redoes this anyway.
+        // More for a starting pose in sim testing.
 
-        resetOdometry(DriveConstants.DEFAULT_STARTING_POSE); 
+        resetOdometry(DriveConstants.DEFAULT_STARTING_POSE);
+
+        // Under sim, we pose the robot before you can change the alliance in the sim UI.
+        // We can't really do it anywhere else or it would interfere with transition from
+        // auto to teleop. So we pose robot at lower left (blue) corner and force the blue
+        // driving perspective.
+
+        if (RobotBase.isSimulation()) driveField.ForwardPerspective = ForwardPerspectiveValue.BlueAlliance;
 		         
         // Register SDS telemetry.
 
@@ -87,6 +96,8 @@ public class DriveBase extends SubsystemBase
     public void periodic() 
     {
         super.periodic();
+
+        sdsDriveBase.periodic();
     }
 
     public void drive(double throttle, double strafe, double rotation)

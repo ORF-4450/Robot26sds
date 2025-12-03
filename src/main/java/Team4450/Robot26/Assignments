@@ -5,28 +5,26 @@ Port	Device			Description
 -----------------------------------------------------------------------------------
 21      CANdle          The CTRE CANdle LED controller
 
-SparkMax CAN Ports
+Motor CAN Ports
 Port	Device			Description
 -----------------------------------------------------------------------------------
-1       SparkFlex       FL drive motor.
-2       SparkMax        FL steer motor.
-3       SparkFlex       FR drive motor.
-4       SparkMax        FR steer motor.
-5       SparkFlex       RL drive motor.
-6       SparkMax        RL steer motor.
-7       SparkFlex       RR drive motor.
-8       SparkMax        RR steer motor.
-9       SparkFlex       Coral Motor.
-10      SparkFlex       Algae Motor.
-11      SparkFlex       Left Elevator Motor.
-12      SparkFlex       Right Elevator Motor.
-13      SparkFlex       Algae Ground Intake Motor.
+1       TalonFX         FL drive motor.
+2       TalonFX         FL steer motor.
+3       TalonFX         FR drive motor.
+4       TalonFX         FR steer motor.
+5       TalonFX         RL drive motor.
+6       TalonFX         RL steer motor.
+7       TalonFX         RR drive motor.
+8       TalonFX         RR steer motor.
 
 
-SparkMax CAN Limit Switches (Plugged into the controllers)
+Encoders
 Port    Type            Description
------------------------------------------------------------------------------------
-13               
+-----------------------------------------------------------------------------------             
+1       CanCoder        FL encoder
+2       CanCoder        FR encoder
+3       CanCoder        RL encoder
+4       CanCoder        RR encoder
 
 
 PWM Ports
@@ -49,17 +47,6 @@ Port	Device blk-pos	Description
 PCM 1 Ports (REV PH)
 Port	Device blk-pos	Description
 -----------------------------------------------------------------------------------
-0       ValveDA   0     CORAL_PIVOT_A
-1       ValveDA   0     CORAL_PIVOT_B
-2       ValveDA   1     ALGAE_EXTEND_A
-3       ValveDA   1     ALGAE_EXTEND_B
-4       ValveDA   2     ALGAE_PIVOT_A
-5       ValveDA   2     ALGAE_PIVOT_B
-6       ValveDA   3     ALGAE_GROUND_A
-7       ValveDA   3     ALGAE_GROUND_B
-8       
-9
-10
 
 
 Digital I/O Ports
@@ -88,26 +75,26 @@ X Axis                  Rotate.
 Driver GamePad - Buttons
 Button Name				Function
 -----------------------------------------------------------------------------------
-LEFT_TRIGGER            Drive To Left Branch
-RIGHT_TRIGGER           Drive to Right Branch
+LEFT_TRIGGER            
+RIGHT_TRIGGER           
 LEFT_BUMPER             Slow Mode (hold)
-RIGHT_BUMPER            Alternate Rotation (hold + R Stick)
+RIGHT_BUMPER            Alternate Rotation (hold + R Stick) - not implemented yet
 POV_0 (DPAD UP)
 POV_90 (DPAD RIGHT)     Park Wheels      
 POV_180 (DPAD DOWN)
 POV_270 (DPAD LEFT)             
-BACK                    Toggle Field Relative
-START                   Reset Gyro
-A                       Brake Mode
+BACK                    
+START                   Reset Field Orientation
+A                       Toggle Field Relative
 B                       
-X                       Drive To Center of AprilTag
+X                       
 Y                       
 
 
 Utility GamePad - Left Joystick
 Button Name				Function
 -----------------------------------------------------------------------------------
-Y Axis                  Move Elevator Up/Down
+Y Axis                  
 
 
 Utility GamePad - Right Joystick
@@ -118,19 +105,6 @@ Button Name				Function
 Utility GamePad - Buttons
 Button Name				Function
 -----------------------------------------------------------------------------------
-A                       Set L2 Coral Scoring Position                     
-B                       Set L3 Coral Scoring Position
-X                       Set L1 Coral Scoring Position
-Y                       Set L4 Coral Scoring Position
-LEFT_TRIGGER            Intake Coral/Algae
-RIGHT_TRIGGER           Outtake Coral/Algae
-LEFT_BUMPER             Intake Algae (Ground)
-RIGHT_BUMPER            
-BACK                    Set Elevator and all Manipulators to RESET Position
-POV_0                   Set L3 Algae Removing Position
-POV_90                  Set Net Algae Scoring Position
-POV_180                 Set L2 Algae Removing Position
-POV_270                 Set Processor Algae Scoring Position
 
 
 Dashboard Indicators/Controls
@@ -153,6 +127,4 @@ Alternate Drive         boolean         True when alternate driving mode is enab
 CompressorEnabled       boolean         True when/to enable compresspr.
 LowPressure             boolean         Toggles true/false when pressure is low.
 AirPressure             numeric         Actual high side air pressure.
-
-Drive Base gearbox ratios: MaxSwerve 12 tooth pinion for approx 16.1 f/s or 4.9 m/s.
 

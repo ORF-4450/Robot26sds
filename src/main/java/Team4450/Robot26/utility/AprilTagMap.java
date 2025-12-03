@@ -4,6 +4,8 @@ import java.util.HashMap;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 
+// Needs to be updated for 2026.
+
 public class AprilTagMap {
 
 public static HashMap<Integer, Pose2d> aprilTagToPoseMap = new HashMap<>(); static {
