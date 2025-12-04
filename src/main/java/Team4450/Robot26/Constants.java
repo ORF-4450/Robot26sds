@@ -22,7 +22,7 @@ import edu.wpi.first.wpilibj.DriverStation;
  */
 public final class Constants
 {
-	public static String		PROGRAM_NAME = "RAC26sds-12.02.25";
+	public static String		PROGRAM_NAME = "RAC26sds-12.03.25";
 
 	public static Robot			robot;
 
@@ -40,7 +40,7 @@ public final class Constants
     public static final int     ROBOT_PERIOD_MS = 20;
 
     // See DriveBase SimulationPeriodic for an explanation of this constant.
-    public static final double  DEG_INCR_MULTIPLIER = ROBOT_PERIOD_SEC * 57.2957795;
+    //public static final double  DEG_INCR_MULTIPLIER = ROBOT_PERIOD_SEC * 57.2957795;
 
 	// Non-drive base motor controller port assignments
     
@@ -90,7 +90,7 @@ public final class Constants
 
         // Starting pose for sim. Is lower left corner (blue) or where we want sim robot to start.
         //public static final Pose2d	DEFAULT_STARTING_POSE = new Pose2d(7.473, .559, Rotation2d.kZero);
-        public static final Pose2d	DEFAULT_STARTING_POSE = new Pose2d(0, 0, Rotation2d.kZero);
+        public static final Pose2d	DEFAULT_STARTING_POSE = new Pose2d(0, 0, Rotation2d.fromDegrees(45));
     }
 
     // public static final class AutoConstants {

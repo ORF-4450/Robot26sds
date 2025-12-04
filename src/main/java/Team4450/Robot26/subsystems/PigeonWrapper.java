@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 public class PigeonWrapper extends SubsystemBase
 {
     public Pigeon2      pigeon;
+    private double      startingYaw;
 
     public PigeonWrapper(Pigeon2 pigeon)
     {
@@ -31,7 +32,7 @@ public class PigeonWrapper extends SubsystemBase
      */
     public double getYaw()
     {
-        return -pigeon.getYaw().getValueAsDouble();
+        return -pigeon.getYaw().getValueAsDouble() + startingYaw;
     }
 
 	/**
@@ -44,7 +45,7 @@ public class PigeonWrapper extends SubsystemBase
 	{
 		double heading;
 		
-		heading = getYaw() ;
+		heading = getYaw();
 
 		heading = heading - ((int) (heading / 360) * 360);
 		
@@ -66,6 +67,16 @@ public class PigeonWrapper extends SubsystemBase
     public void reset()
     {
         pigeon.reset();
+    }
+  
+    /**
+     * Set a starting yaw for the case where robot is not starting
+     * with back bumper parallel to the wall. 
+     * @param degrees - is clockwise (cw or right).
+     */
+    public void setStartingGyroYaw(double degrees)
+    {
+        startingYaw = degrees;
     }
 
     @Override

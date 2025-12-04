@@ -5,6 +5,7 @@ import static Team4450.Robot26.Constants.DriveConstants.*;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest.ForwardPerspectiveValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import Team4450.Lib.Util;
@@ -30,12 +31,13 @@ public class DriveBase extends SubsystemBase
     public PigeonWrapper                gyro = new PigeonWrapper(sdsDriveBase.getPigeon2());
     
     private final Telemetry     		logger = new Telemetry(kMaxSpeed);
-    
-	private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
 
     private boolean                     fieldRelativeDriving = true, slowMode = false;
+    private boolean                     neutralModeBrake = true;
     private double                      driveSlowfactor = 1.0, rotateSlowfactor = 1.0;
     private double                      startingGyroRotation;
+    
+	private final SwerveRequest.SwerveDriveBrake driveBrake = new SwerveRequest.SwerveDriveBrake();
 
     private final SwerveRequest.FieldCentric driveField = new SwerveRequest.FieldCentric()
             .withDeadband(kMaxSpeed * DRIVE_DEADBAND)
@@ -65,6 +67,10 @@ public class DriveBase extends SubsystemBase
 			Util.logException(e);
 		}
 
+        // Set drive motors to brake when power is zero.
+
+        sdsDriveBase.configNeutralMode(NeutralModeValue.Brake);
+
 		// Idle while the robot is disabled. This ensures the configured
         // neutral mode is applied to the drive motors while disabled.
         
@@ -80,23 +86,23 @@ public class DriveBase extends SubsystemBase
 
         resetOdometry(DriveConstants.DEFAULT_STARTING_POSE);
 
-        // Under sim, we pose the robot before you can change the alliance in the sim UI.
-        // We can't really do it anywhere else or it would interfere with transition from
-        // auto to teleop. So we pose robot at lower left (blue) corner and force the blue
-        // driving perspective.
+        // Under sim, we starting pose the robot (above) before you can change the alliance 
+        // in the sim UI. We can't really do it anywhere else or it would interfere with 
+        // transition from auto to teleop. So we pose robot at lower left (blue) corner and
+        // force the blue driving perspective.
 
         if (RobotBase.isSimulation()) driveField.ForwardPerspective = ForwardPerspectiveValue.BlueAlliance;
 		         
-        // Register SDS telemetry.
+        // Register for SDS telemetry.
 
         sdsDriveBase.registerTelemetry(logger::telemeterize);
+
+        updateDS();
     }
 
     @Override
     public void periodic() 
     {
-        super.periodic();
-
         sdsDriveBase.periodic();
     }
 
@@ -121,16 +127,16 @@ public class DriveBase extends SubsystemBase
     {
         Util.consoleLog();
 
-        sdsDriveBase.applyRequest(() -> brake);
+        sdsDriveBase.applyRequest(() -> driveBrake);
     }
         
 	public void toggleFieldRelativeDriving()
 	{
 		fieldRelativeDriving = !fieldRelativeDriving;
-        
-        SmartDashboard.putBoolean("Field Relative", fieldRelativeDriving);
 
         Util.consoleLog("%b", fieldRelativeDriving);
+
+        updateDS();
 	}
 
     public void toggleSlowMode() 
@@ -144,6 +150,20 @@ public class DriveBase extends SubsystemBase
             driveSlowfactor = kSlowModeFactor;
             rotateSlowfactor = kRotSlowModeFactor;
         } else driveSlowfactor = rotateSlowfactor = 1.0;
+    }
+
+    public void toggleNeutralMode()
+    {
+        neutralModeBrake = !neutralModeBrake;
+
+        Util.consoleLog("%b", neutralModeBrake);
+
+        if (neutralModeBrake)
+            sdsDriveBase.configNeutralMode(NeutralModeValue.Brake);
+        else
+            sdsDriveBase.configNeutralMode(NeutralModeValue.Coast);
+
+        updateDS();
     }
 
     public void resetFieldOrientation()
@@ -161,9 +181,7 @@ public class DriveBase extends SubsystemBase
     {
         Util.consoleLog();
 
-        //navx.reset();
-        
-        //m_gyro.reset();
+        gyro.reset();
     }
     
     /**
@@ -176,17 +194,17 @@ public class DriveBase extends SubsystemBase
 
         sdsDriveBase.resetPose(pose);
 
-        setStartingGyroRotation(pose.getRotation().getDegrees());
+        setStartingGyroYaw(-pose.getRotation().getDegrees());
     }
     
     /**
-     * Set a starting pose rotation for the case where robot is not starting
-     * with bumper parallel to the wall. 
+     * Set a starting yaw for the case where robot is not starting
+     * with back bumper parallel to the wall. 
      * @param degrees - is clockwise (cw or right).
      */
-    public void setStartingGyroRotation(double degrees)
+    public void setStartingGyroYaw(double degrees)
     {
-        startingGyroRotation = degrees;
+        gyro.setStartingGyroYaw(degrees);
     }
 
     /**
@@ -201,5 +219,11 @@ public class DriveBase extends SubsystemBase
     public double getYaw()
     {
         return gyro.getYaw();
+    }
+
+    private void updateDS()
+    {
+        SmartDashboard.putBoolean("Brakes", neutralModeBrake);
+        SmartDashboard.putBoolean("Field Oriented", fieldRelativeDriving);
     }
 }
