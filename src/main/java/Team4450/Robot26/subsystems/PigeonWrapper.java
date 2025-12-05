@@ -66,6 +66,8 @@ public class PigeonWrapper extends SubsystemBase
 
     public void reset()
     {
+        Util.consoleLog();
+        
         pigeon.reset();
     }
   
@@ -76,6 +78,8 @@ public class PigeonWrapper extends SubsystemBase
      */
     public void setStartingGyroYaw(double degrees)
     {
+        Util.consoleLog("%.1f", degrees);
+
         startingYaw = degrees;
     }
 

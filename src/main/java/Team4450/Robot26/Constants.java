@@ -22,7 +22,7 @@ import edu.wpi.first.wpilibj.DriverStation;
  */
 public final class Constants
 {
-	public static String		PROGRAM_NAME = "RAC26sds-12.03.25";
+	public static String		PROGRAM_NAME = "RAC26sds-12.05.25";
 
 	public static Robot			robot;
 
@@ -38,9 +38,6 @@ public final class Constants
 
     public static final double  ROBOT_PERIOD_SEC = .02;
     public static final int     ROBOT_PERIOD_MS = 20;
-
-    // See DriveBase SimulationPeriodic for an explanation of this constant.
-    //public static final double  DEG_INCR_MULTIPLIER = ROBOT_PERIOD_SEC * 57.2957795;
 
 	// Non-drive base motor controller port assignments
     
@@ -85,12 +82,12 @@ public final class Constants
         public static double kMaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
         public static double kMaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
 
-        public static final double kSlowModeFactor = .20; // 50% of normal.
+        public static final double kSlowModeFactor = .20; // 20% of normal.
         public static final double kRotSlowModeFactor = .20; // 20% of normal.
 
         // Starting pose for sim. Is lower left corner (blue) or where we want sim robot to start.
         //public static final Pose2d	DEFAULT_STARTING_POSE = new Pose2d(7.473, .559, Rotation2d.kZero);
-        public static final Pose2d	DEFAULT_STARTING_POSE = new Pose2d(0, 0, Rotation2d.fromDegrees(45));
+        public static final Pose2d	DEFAULT_STARTING_POSE = new Pose2d(0, 0, Rotation2d.kZero);
     }
 
     // public static final class AutoConstants {

@@ -35,9 +35,8 @@ public class DriveBase extends SubsystemBase
     private boolean                     fieldRelativeDriving = true, slowMode = false;
     private boolean                     neutralModeBrake = true;
     private double                      driveSlowfactor = 1.0, rotateSlowfactor = 1.0;
-    private double                      startingGyroRotation;
     
-	private final SwerveRequest.SwerveDriveBrake driveBrake = new SwerveRequest.SwerveDriveBrake();
+    private final SwerveRequest.SwerveDriveBrake driveBrake = new SwerveRequest.SwerveDriveBrake();
 
     private final SwerveRequest.FieldCentric driveField = new SwerveRequest.FieldCentric()
             .withDeadband(kMaxSpeed * DRIVE_DEADBAND)
@@ -118,6 +117,8 @@ public class DriveBase extends SubsystemBase
                 driveRobot.withVelocityX(throttle * driveSlowfactor * kMaxSpeed) 
                         .withVelocityY(strafe * driveSlowfactor * kMaxSpeed) 
                         .withRotationalRate(rotation * rotateSlowfactor * kMaxAngularRate));
+
+        SmartDashboard.putNumber("Drive Velocity X", driveField.VelocityX);
     }
 
     /**
@@ -225,5 +226,6 @@ public class DriveBase extends SubsystemBase
     {
         SmartDashboard.putBoolean("Brakes", neutralModeBrake);
         SmartDashboard.putBoolean("Field Oriented", fieldRelativeDriving);
+        SmartDashboard.putNumber("kMaxSpeed", kMaxSpeed);
     }
 }

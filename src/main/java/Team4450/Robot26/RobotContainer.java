@@ -199,10 +199,10 @@ public class RobotContainer
 
 		//Start the compressor, PDP and camera feed monitoring Tasks.
 
-		monitorCompressorThread = MonitorCompressorPH.getInstance(pcm);
-		monitorCompressorThread.setDelay(1.0);
-		monitorCompressorThread.SetLowPressureAlarm(50);
-		monitorCompressorThread.start();
+		// monitorCompressorThread = MonitorCompressorPH.getInstance(pcm);
+		// monitorCompressorThread.setDelay(1.0);
+		// monitorCompressorThread.SetLowPressureAlarm(50);
+		// monitorCompressorThread.start();
 		
 		monitorPDPThread = MonitorPDP.getInstance(pdp);
 		monitorPDPThread.start();
@@ -298,6 +298,10 @@ public class RobotContainer
 		// Toggle field-oriented driving mode.
 		new Trigger(() -> driverController.getAButton()) // rich
 		 	.onTrue(new InstantCommand(driveBase::toggleFieldRelativeDriving));
+
+		// Toggle motor brake mode.
+		new Trigger(() -> driverController.getBButton()) // rich
+		 	.onTrue(new InstantCommand(driveBase::toggleNeutralMode));
 
 		// Right D-Pad button sets X pattern to stop movement.
 		new Trigger(() -> driverController.getPOV() == 90) // rich
